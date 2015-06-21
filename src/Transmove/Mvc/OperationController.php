@@ -29,6 +29,8 @@ class OperationController extends AbstractController
         array_walk($operationsPriorified, array($this, 'setupOperationListener'));
         array_walk($operationsPriorified, array($this, 'triggerOperation'));
 
+        $e->setResult($this->lastResponse);
+
         return $this->lastResponse;
     }
 
