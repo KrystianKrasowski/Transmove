@@ -3,6 +3,8 @@
 namespace Transmove\Mvc;
 
 use Transmove\Move\MoveEvent;
+use Transmove\Mvc\Exception\InterruptException;
+use Zend\Http\PhpEnvironment\Response;
 use Zend\Mvc\Controller\AbstractController;
 use Zend\Mvc\MvcEvent;
 
@@ -24,10 +26,12 @@ class OperationController extends AbstractController
             throw new Exception\LogicException('Operations has not beed properly defined for this request');
         }
 
-        $operationsPriorified = array_reverse($operations, true);
+        $operationsPriorified = $operations;
 
-        array_walk($operationsPriorified, array($this, 'setupOperationListener'));
-        array_walk($operationsPriorified, array($this, 'triggerOperation'));
+        try {
+            array_walk($operationsPriorified, array($this, 'setupOperationListener'));
+            array_walk($operationsPriorified, array($this, 'triggerOperation'));
+        } catch (InterruptException $ex) {}
 
         $e->setResult($this->lastResponse);
 
@@ -51,5 +55,9 @@ class OperationController extends AbstractController
         $result = $this->getEventManager()->trigger($event);
 
         $this->lastResponse = $result->last();
+
+        if ($result->last() instanceof Response) {
+            throw new InterruptException();
+        }
     }
 } 
